@@ -1,78 +1,47 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Nigger Hub", "DarkTheme")
+local localPlayer = game:GetService("Players").LocalPlayer
+local currentCamera = game:GetService("Workspace").CurrentCamera
+local mouse = localPlayer:GetMouse()
 
-local Combat = Window:NewTab("Combat")
-local Main = Window:NewTab("Main")
-local MainSection = Main:NewSection("Main")
+local function getClosestPlayerToCursor(x, y)
+    local closestPlayer = nil
+    local shortestDistance = math.huge
 
+    for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if v ~= localPlayer and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
+            local pos = currentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+            local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(x, y)).magnitude
 
-Combat:NewButton("Silent Aim", "Kill Anyone in the circle", function()
-getgenv().silentaim_settings = {
-    fov = 150,
-    hitbox = "Head",
-    fovcircle = true,
- }
- -- Services
- local Players = game:GetService("Players")
- local RunService = game:GetService("RunService")
- 
- -- Player
- local Player = Players.LocalPlayer
- local Mouse = Player:GetMouse()
- local CurrentCamera = workspace.CurrentCamera
- 
- local function GetClosest(Fov)
-    local Target, Closest = nil, Fov or math.huge
- 
-    for i,v in pairs(Players:GetPlayers()) do
-        if (v.Character and v ~= Player and v.Character:FindFirstChild(getgenv().silentaim_settings.hitbox)) then
-            local Position, OnScreen = CurrentCamera:WorldToScreenPoint(v.Character[getgenv().silentaim_settings.hitbox].Position)
-            local Distance = (Vector2.new(Position.X, Position.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
- 
-            if (Distance < Closest and OnScreen) then
-                Closest = Distance
-                Target = v
+            if magnitude < shortestDistance then
+                closestPlayer = v
+                shortestDistance = magnitude
             end
-        end
+		end
     end
-    
-    return Target
- end
- 
- local Target
- local CircleInline = Drawing.new("Circle")
- local CircleOutline = Drawing.new("Circle")
- RunService.Stepped:Connect(function()
-    CircleInline.Radius = getgenv().silentaim_settings.fov
-    CircleInline.Thickness = 2
-    CircleInline.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
-    CircleInline.Transparency = 1
-    CircleInline.Color = Color3.fromRGB(255, 255, 255)
-    CircleInline.Visible = getgenv().silentaim_settings.fovcircle
-    CircleInline.ZIndex = 2
- 
-    CircleOutline.Radius = getgenv().silentaim_settings.fov
-    CircleOutline.Thickness = 4
-    CircleOutline.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
-    CircleOutline.Transparency = 1
-    CircleOutline.Color = Color3.new()
-    CircleOutline.Visible = getgenv().silentaim_settings.fovcircle
-    CircleOutline.ZIndex = 1
- 
-    Target = GetClosest(getgenv().silentaim_settings.fov)
- end)
- 
- local Old; Old = hookmetamethod(game, "__namecall", function(Self, ...)
-    local Args = {...}
- 
-    if (not checkcaller() and getnamecallmethod() == "FindPartOnRayWithIgnoreList") then
-        if (table.find(Args[2], workspace.WorldIgnore.Ignore) and Target and Target.Character) then
-            local Origin = Args[1].Origin
- 
-            Args[1] = Ray.new(Origin, Target.Character[getgenv().silentaim_settings.hitbox].Position - Origin)
-        end
+
+    return closestPlayer
+end
+
+local mt = getrawmetatable(game)
+local oldIndex = mt.__index
+if setreadonly then setreadonly(mt, false) else make_writeable(mt, true) end
+local newClose = newcclosure or function(f) return f end
+
+mt.__index = newClose(function(t, k)
+    if not checkcaller() and t == mouse and tostring(k) == "X" and string.find(getfenv(2).script.Name, "Client") and getClosestPlayerToCursor() then
+    	local closest = getClosestPlayerToCursor(oldIndex(t, k), oldIndex(t, "Y")).Character.Head
+    	local pos = currentCamera:WorldToScreenPoint(closest.Position)
+    	return pos.X
     end
- 
-    return Old(Self, unpack(Args))
- end)
+    if not checkcaller() and t == mouse and tostring(k) == "Y" and string.find(getfenv(2).script.Name, "Client") and getClosestPlayerToCursor() then
+    	local closest = getClosestPlayerToCursor(oldIndex(t, "X"), oldIndex(t, k)).Character.Head
+    	local pos = currentCamera:WorldToScreenPoint(closest.Position)
+    	return pos.Y
+    end
+    if t == mouse and tostring(k) == "Hit" and string.find(getfenv(2).script.Name, "Client") and getClosestPlayerToCursor() then
+        return getClosestPlayerToCursor(mouse.X, mouse.Y).Character.Head.CFrame
+    end
+
+    return oldIndex(t, k)
 end)
+
+if setreadonly then setreadonly(mt, true) else make_writeable(mt, false) end
