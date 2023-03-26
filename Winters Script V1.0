@@ -4,6 +4,18 @@ local Window = Library.CreateLib("Winters Script  V1.0", "DarkTheme")
 local Main = Window:NewTab("Main")
 local MainSection = Main:NewSection("Main")
 
-MainSection:NewButton("Silent aim", "Never Miss", function()
+MainSection:NewButton("Silent aim (Best with gun)", "Never Miss", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Wintergamer188382/scripts/main/silent"))()
+end)
+
+MainSection:NewButton("Esp", "See Everyone through walls", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Wintergamer188382/scripts/main/Esp"))()
+end)
+
+MainSection:NewButton("Rejoin", "Rejoin the game", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Wintergamer188382/scripts/main/rejoin"))()
+end)
+
+MainSection:NewButton("Hold Ctrl then click somewhere to teleport", "click tp", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Wintergamer188382/scripts/main/click%20tp"))()
 end)
